@@ -5,61 +5,85 @@
       members header|Members text for dynamic page header on the members page
     "
   >
-    <fdp-dynamic-page-global-actions>
-      <fd-toolbar fdType="transparent" [clearBorder]="true">
-        <button
-          data-testid="app-iam-member-list-add-button"
-          fd-button
-          fdType="emphasized"
-          id="open-add-members-dialog-button"
-          label="Add"
-          i18n-label="add button label|Add button text on the members page"
-          title="Add members"
-          (click)="openAddMembersDialog()"
-        ></button>
-      </fd-toolbar>
-    </fdp-dynamic-page-global-actions>
+    @if (!isUnauthorized()) {
+      <fdp-dynamic-page-global-actions>
+        <fd-toolbar fdType="transparent" [clearBorder]="true">
+          <button
+            data-testid="app-iam-member-list-add-button"
+            fd-button
+            fdType="emphasized"
+            id="open-add-members-dialog-button"
+            label="Add"
+            i18n-label="add button label|Add button text on the members page"
+            title="Add members"
+            (click)="openAddMembersDialog()"
+          ></button>
+        </fd-toolbar>
+      </fdp-dynamic-page-global-actions>
+    }
   </fdp-dynamic-page-title>
 
-  <fdp-dynamic-page-header [pinnable]="true">
-    <div class="members-filter-group">
-      <div class="members-filter-group-search-term">
-        <fdp-search-field
-          contentDensity="compact"
-          data-testid="app-iam-members-list-search-input"
-          fd-initial-focus
-          placeholder="Search"
-          i18n-placeholder="
-            search field placeholder|Search field on the members page
-          "
-          [disableRefresh]="true"
-          [inputText]="searchTerm"
-          (cancelSearch)="onSearchSubmit()"
-          (searchSubmit)="onSearchSubmit($event.text)"
-        />
-      </div>
-      @if (rolesForEntity().length) {
-        <div class="members-filter-group-roles">
-          <div fd-form-item>
-            <label fd-form-label [colon]="true">Roles</label>
-            <fd-multi-combobox
-              name="Roles"
-              contentDensity="compact"
-              displayKey="displayName"
-              lookupKey="id"
-              placeholder="All"
-              [autoResize]="true"
-              [dataSource]="rolesForEntity()"
-              (selectionChange)="setRolesFilter($event)"
-            />
-          </div>
+  @if (!isUnauthorized()) {
+    <fdp-dynamic-page-header [pinnable]="true">
+      <div class="members-filter-group">
+        <div class="members-filter-group-search-term">
+          <fdp-search-field
+            contentDensity="compact"
+            data-testid="app-iam-members-list-search-input"
+            fd-initial-focus
+            placeholder="Search"
+            i18n-placeholder="
+              search field placeholder|Search field on the members page
+            "
+            [disableRefresh]="true"
+            [inputText]="searchTerm"
+            (cancelSearch)="onSearchSubmit()"
+            (searchSubmit)="onSearchSubmit($event.text)"
+          />
         </div>
-      }
-    </div>
-  </fdp-dynamic-page-header>
+        @if (rolesForEntity().length) {
+          <div class="members-filter-group-roles">
+            <div fd-form-item>
+              <label fd-form-label [colon]="true">Roles</label>
+              <fd-multi-combobox
+                contentDensity="compact"
+                displayKey="displayName"
+                lookupKey="id"
+                name="Roles"
+                placeholder="All"
+                [autoResize]="true"
+                [dataSource]="rolesForEntity()"
+                (selectionChange)="setRolesFilter($event)"
+              />
+            </div>
+          </div>
+        }
+      </div>
+    </fdp-dynamic-page-header>
+  }
 
   <fdp-dynamic-page-content cdkScrollable id="iam-members-content">
-    @if (members() && !isLoading()) {
+    @if (isUnauthorized()) {
+      <div class="unauthorized-state">
+        <figure
+          fd-illustrated-message
+          type="scene"
+          [svgConfig]="unauthorizedConfig"
+        >
+          <figcaption fd-illustrated-message-figcaption>
+            <h3
+              fd-illustrated-message-title
+              i18n="
+                unauthorized members message|Shown when the user is not
+                authorized to view the members of this entity
+              "
+            >
+              You are not authorized to access this content.
+            </h3>
+          </figcaption>
+        </figure>
+      </div>
+    } @else if (members() && !isLoading()) {
       <fdp-table
         contentDensity="compact"
         [dataSource]="members()"
@@ -80,7 +104,7 @@
               />
             }
             @if (!!member.user && !member.user.invitationOutstanding) {
-              <iam-avatar title="View Profile" size="s" [user]="member.user" />
+              <iam-avatar size="s" title="View Profile" [user]="member.user" />
             }
             @if (member.team) {
               <fd-avatar glyph="group" size="s" [circle]="true" />
